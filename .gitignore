@@ -1,0 +1,13 @@
+# Go
+*.exe
+*.test
+vendor/
+
+# .NET
+bin/
+obj/
+*.user
+
+# General
+.DS_Store
+*.log
