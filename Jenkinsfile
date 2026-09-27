@@ -26,6 +26,18 @@ pipeline {
                 sh 'docker images ${IMAGE_NAME}:${IMAGE_TAG}'
             }
         }
+
+        stage('Security Scan (Trivy)') {
+            steps {
+                sh '''
+                    trivy image \
+                      --severity HIGH,CRITICAL \
+                      --exit-code 0 \
+                      --format table \
+                      ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+            }
+        }
     }
 
     post {
