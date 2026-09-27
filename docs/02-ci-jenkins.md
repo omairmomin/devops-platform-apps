@@ -33,3 +33,13 @@ First pipeline run: SUCCESS. `frontend:2` image built.
 - Add SonarCloud code quality scan
 - Add Trivy image vulnerability scan
 - Push image to GitHub Container Registry (GHCR)
+
+## Update: Trivy security scan added
+- Trivy installed on both the EC2 host and inside the Jenkins container
+- Pipeline now scans the built image for HIGH/CRITICAL vulnerabilities
+  after build (`--exit-code 0`, non-blocking for now — report-only)
+- First scan result: frontend base image (distroless) had 0 OS-level
+  vulnerabilities; the Go binary itself showed a few MEDIUM findings,
+  no HIGH/CRITICAL
+- Can be switched to blocking (`--exit-code 1`) later to fail the build
+  on serious vulnerabilities
