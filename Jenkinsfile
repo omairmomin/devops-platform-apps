@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        REGISTRY   = "ghcr.io/omairmomin"
         IMAGE_NAME = "frontend"
         IMAGE_TAG  = "${env.BUILD_NUMBER}"
     }
@@ -38,11 +39,28 @@ pipeline {
                 '''
             }
         }
+
+        stage('Push to GHCR') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'ghcr-credentials',
+                    usernameVariable: 'GHCR_USER',
+                    passwordVariable: 'GHCR_TOKEN'
+                )]) {
+                    sh '''
+                        echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker logout ghcr.io
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Build succeeded: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Pushed: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
         }
         failure {
             echo "Build failed"
