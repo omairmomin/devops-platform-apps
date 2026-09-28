@@ -43,3 +43,14 @@ First pipeline run: SUCCESS. `frontend:2` image built.
   no HIGH/CRITICAL
 - Can be switched to blocking (`--exit-code 1`) later to fail the build
   on serious vulnerabilities
+
+## Update: Push to GitHub Container Registry (GHCR)
+- Added a dedicated GitHub PAT (`write:packages`, `read:packages`) stored as
+  the Jenkins credential `ghcr-credentials`, separate from the repo-access token
+- Pipeline order: Build -> Trivy scan -> Push, so images are scanned before
+  reaching the registry
+- Credentials injected with `withCredentials` and passed via
+  `--password-stdin`; the token is masked in build logs and never stored in the repo
+- Images are tagged with the Jenkins build number
+  (`ghcr.io/omairmomin/frontend:<build>`)
+- GHCR used instead of ECR to stay within the free budget
