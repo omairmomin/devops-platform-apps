@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY   = "ghcr.io/omairmomin"
-        IMAGE_NAME = "frontend"
-        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+        REGISTRY    = "ghcr.io/omairmomin"
+        IMAGE_NAME  = "frontend"
+        IMAGE_TAG   = "${env.BUILD_NUMBER}"
+        CONFIG_REPO = "https://github.com/omairmomin/devops-platform-config.git"
     }
 
     stages {
@@ -56,11 +57,31 @@ pipeline {
                 }
             }
         }
+
+        stage('Update Config Repo') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-credentials',
+                    usernameVariable: 'GH_USER',
+                    passwordVariable: 'GH_TOKEN'
+                )]) {
+                    sh '''
+                        rm -rf config-repo
+                        git clone https://${GH_USER}:${GH_TOKEN}@github.com/omairmomin/devops-platform-config.git config-repo
+                        cd config-repo
+                        sed -i "s|ghcr.io/omairmomin/frontend:[^\\"[:space:]]*|${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|" manifests/online-boutique.yaml
+                        git add manifests/online-boutique.yaml
+                        git commit -m "Update frontend image to ${IMAGE_TAG} [ci skip]" || echo "No changes to commit"
+                        git push
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Pushed: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Pushed ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} and updated config repo"
         }
         failure {
             echo "Build failed"
