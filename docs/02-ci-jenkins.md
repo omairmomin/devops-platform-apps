@@ -54,3 +54,13 @@ First pipeline run: SUCCESS. `frontend:2` image built.
 - Images are tagged with the Jenkins build number
   (`ghcr.io/omairmomin/frontend:<build>`)
 - GHCR used instead of ECR to stay within the free budget
+
+## Update: Full GitOps automation
+- Added a final pipeline stage that clones `devops-platform-config`,
+  updates the `frontend` image tag in `manifests/online-boutique.yaml`
+  to the new build number, and pushes the commit back
+- Uses the same GitHub PAT (`github-credentials`) already scoped for repo access
+- ArgoCD's automated sync then picks up the change and redeploys
+  `frontend` with zero manual intervention
+- End-to-end flow: git push -> Jenkins build -> Trivy scan -> GHCR push ->
+  config repo update -> ArgoCD sync -> live in cluster
